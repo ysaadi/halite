@@ -27,6 +27,20 @@ func gracefulExit(logger *log.FileLogger) {
 	}()
 }
 
+func aveInDirection(game *hlt.Game, direction *Direction) float64 {
+	var gameMap = game.Map
+	var me = game.Me
+	var shipyard = me.Shipyard
+	var pathPosition = shipyard.E.Pos
+	var haliteSum int
+	for x := 0; x < 25; x++ {
+		pathPosition, _ = pathPosition.DirectionalOffset(direction)
+		haliteSum += gameMap.AtPosition(pathPosition).Halite
+	}
+	var haliteAverage = float64(haliteSum) / 25.0
+	return haliteAverage
+}
+
 func main() {
 	args := os.Args
 	var seed = time.Now().UnixNano() % int64(os.Getpid())
@@ -43,6 +57,10 @@ func main() {
 	var config = gameconfig.GetInstance()
 	fileLogger := log.NewFileLogger(game.Me.ID)
 	var logger = fileLogger.Logger
+
+	var northAve = aveInDirection(game, hlt.North())
+	logger.Printf("Average halite in the 25 north blocks is %d", northAve)
+
 	logger.Printf("Successfully created bot! My Player ID is %d. Bot rng seed is %d.", game.Me.ID, seed)
 	gracefulExit(fileLogger)
 	game.Ready("MyBot")
